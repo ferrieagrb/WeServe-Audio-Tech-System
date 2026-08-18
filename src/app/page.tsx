@@ -876,6 +876,7 @@ export default function ChecklistPage() {
                   <option value="Cable">Cable</option>
                   <option value="Speaker">Speaker</option>
                   <option value="Accessory">Accessory</option>
+                  <option value="Accessory">D.I. Box</option>
                 </select>
               </div>
 
