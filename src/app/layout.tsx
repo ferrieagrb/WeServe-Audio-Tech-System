@@ -32,11 +32,3 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   );
 }
 
-export const metadata: Metadata = {
-  title: 'Audio Tech Ministry',
-  description: 'Service Checklist and Inventory Management',
-  icons: {
-    icon: '/favicon.png', // Matches the file inside your public folder
-  },
-};
-
