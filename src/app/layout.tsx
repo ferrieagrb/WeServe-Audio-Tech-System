@@ -3,6 +3,7 @@ import { AppProvider } from '@/context/ChecklistContext'; // Changed ChecklistPr
 import './globals.css';
 import {Nunito} from 'next/font/google';
 import { Roboto } from 'next/font/google';
+import type { Metadata } from 'next';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -30,4 +31,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
+export const metadata: Metadata = {
+  title: 'Audio Tech Ministry',
+  description: 'Service Checklist and Inventory Management',
+  icons: {
+    icon: '/favicon.png', // Matches the file inside your public folder
+  },
+};
 
