@@ -32,3 +32,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   );
 }
 
+
+export const metadata: Metadata = {
+  title: 'WeServe Silang Audio', // <-- Change this to whatever title you want
+  description: 'Service Checklist and Inventory Management',
+};
