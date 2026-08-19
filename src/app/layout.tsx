@@ -22,15 +22,13 @@ const roboto = Roboto({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${nunito.variable} ${roboto.variable}`}>
-      <head>
-        <SpeedInsights />
-      </head>
       <body className="font-nunito font-roboto">
         <AuthProvider>
           <AppProvider>
             {children}
           </AppProvider>
         </AuthProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
