@@ -26,7 +26,6 @@ import {
   Calendar,
   Clock,
   FileText,
-  Key,
   Pencil
 } from 'lucide-react';
 
@@ -46,7 +45,7 @@ export default function ChecklistPage() {
     setMounted(true);
   }, []);
 
-  const { currentUser, logout, addAdminAccount, deleteAdminAccount, updateUserRole, deleteUserAccount, users, enable2FA, disable2FA } = useAuth();
+  const { currentUser, logout, addAdminAccount, deleteAdminAccount, updateUserRole, deleteUserAccount, users } = useAuth();
   const { 
     checklist, 
     toggleCheck, 
@@ -79,7 +78,6 @@ export default function ChecklistPage() {
   const [editingInventoryItem, setEditingInventoryItem] = useState<InventoryItem | null>(null);
   const [isManageAdminsOpen, setIsManageAdminsOpen] = useState(false); 
   const [isAddScheduleModalOpen, setIsAddScheduleModalOpen] = useState(false);
-  const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
   const [selectedSummarySession, setSelectedSummarySession] = useState<ScheduleSession | null>(null);
 
   // Form States - Checklist
@@ -236,13 +234,6 @@ export default function ChecklistPage() {
     setSelectedTask(null);
   };
 
-  const handleAdminResolve = () => {
-    if (!selectedTask) return;
-    resolveTask(selectedTask.id);
-    resetRemarksForm();
-    setSelectedTask(null);
-  };
-
   const completedCount = checklist.filter((i) => i.isChecked).length; 
 
   const getInventoryRemarksHistory = (invItem: InventoryItem): RemarkEntry[] => {
@@ -306,14 +297,6 @@ export default function ChecklistPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIs2FAModalOpen(true)}
-              className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors"
-            >
-              <Key className="w-3.5 h-3.5" />
-              <span>2FA {currentUser.twoFactorEnabled ? '(Enabled)' : '(Disabled)'}</span>
-            </button>
-
             {isSuperadmin && (
               <button
                 onClick={() => setIsManageAdminsOpen(true)}
@@ -496,17 +479,16 @@ export default function ChecklistPage() {
                                 {item.category}
                               </span>
                               {matchedInv && (
-    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-      matchedInv.status === 'available' ? 'bg-emerald-100 text-emerald-700' :
-      matchedInv.status === 'in_use' ? 'bg-blue-100 text-blue-700' :
-      matchedInv.status === 'needs_repair' ? 'bg-amber-100 text-amber-700' :
-      'bg-red-100 text-red-700'
-    }`}>
-      {matchedInv.status.replace('_', ' ')}
-    </span>
-  )}
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                  matchedInv.status === 'available' ? 'bg-emerald-100 text-emerald-700' :
+                                  matchedInv.status === 'in_use' ? 'bg-blue-100 text-blue-700' :
+                                  matchedInv.status === 'needs_repair' ? 'bg-amber-100 text-amber-700' :
+                                  'bg-red-100 text-red-700'
+                                }`}>
+                                  {matchedInv.status.replace('_', ' ')}
+                                </span>
+                              )}
                             </div>
-                            
                           </div>
                         </button>
 
@@ -565,15 +547,6 @@ export default function ChecklistPage() {
                 inventory.map((item) => {
                   const remarksHistory = getInventoryRemarksHistory(item);
                   
-                  // Updated isItemResolved definition to correctly bypass resolution suppression when item needs repair or is broken
-                  const isItemResolved = 
-                    (item.status !== 'needs_repair' && item.status !== 'broken' && item.status === 'available') && 
-                    !checklist.some(
-                      (task) => 
-                        (task.inventoryItemId === item.id || task.gearName.toLowerCase().includes(item.name.toLowerCase())) && 
-                        !task.isResolved
-                    );
-
                   const activeRemarks = remarksHistory.filter(r => r.isPendingResolution !== false);
                   const hasActiveRemarks = activeRemarks.length > 0;
                   const needsAction = item.status === 'needs_repair' || item.status === 'broken';
@@ -930,65 +903,6 @@ export default function ChecklistPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* 2FA SETUP MODAL */}
-      {is2FAModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl border w-full max-w-md overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b bg-slate-50">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-indigo-600" />
-                <h2 className="text-base font-bold text-slate-800">Two-Factor Authentication (2FA)</h2>
-              </div>
-              <button onClick={() => setIs2FAModalOpen(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-4 space-y-4 text-center">
-              {currentUser.twoFactorEnabled ? (
-                <div className="space-y-3">
-                  <p className="text-xs text-slate-600">
-                    Two-factor authentication is currently <strong className="text-emerald-600">ENABLED</strong> on your account.
-                  </p>
-                  <button
-                    onClick={() => {
-                      disable2FA(currentUser.id);
-                      setIs2FAModalOpen(false);
-                    }}
-                    className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
-                  >
-                    Disable 2FA
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-xs text-slate-600">
-                    Enhance your account security by enabling Two-Factor Authentication using an authenticator app (e.g., Google Authenticator).
-                  </p>
-                  <div className="bg-slate-50 p-4 border rounded-lg inline-block">
-                    <div className="w-32 h-32 bg-slate-200 mx-auto flex items-center justify-center text-[10px] text-slate-500 border border-dashed">
-                      [ QR Code Placeholder ]
-                    </div>
-                    <p className="text-[10px] text-slate-400 mt-2 font-mono">Secret: MOCK_2FA_SECRET_KEY_123</p>
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => {
-                        enable2FA(currentUser.id);
-                        setIs2FAModalOpen(false);
-                      }}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
-                    >
-                      Enable 2FA
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       )}
