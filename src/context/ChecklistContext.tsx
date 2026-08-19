@@ -111,7 +111,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (checklistData) setChecklist(checklistData);
 
         const { data: inventoryData, error: inventoryError } = await supabase
-          .from('Equipment')
+          .from('equipment')
           .select('*');
         if (inventoryError) throw inventoryError;
         if (inventoryData) setInventory(inventoryData);
