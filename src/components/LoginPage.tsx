@@ -1,16 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { ShieldCheck, Lock, Mail, Key, UserCheck } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const { login, initiateGoogleOAuth, verify2FA } = useAuth();
+  const { login, initiateGoogleOAuth, loginWithGoogle, verify2FA } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [pendingUser, setPendingUser] = useState<any>(null);
   const [error, setError] = useState('');
+  const router = useRouter();
+
+  // Catch Google ID Token from URL hash fragment on redirect
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('id_token=')) {
+      try {
+        const params = new URLSearchParams(hash.replace('#', '?'));
+        const idToken = params.get('id_token');
+
+        if (idToken) {
+          const base64Url = idToken.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split('')
+              .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+              .join('')
+          );
+
+          const payload = JSON.parse(jsonPayload);
+          
+          // This automatically checks if the user exists and creates/matches them!
+          loginWithGoogle({
+            name: payload.name || payload.email.split('@')[0],
+            email: payload.email,
+          }).then(() => {
+            router.push('/'); // Redirect to dashboard after successful sync
+          });
+        }
+      } catch (e) {
+        console.error('Failed to parse Google ID Token from hash:', e);
+        setError('Google authentication failed.');
+      }
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
