@@ -44,7 +44,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('Error fetching users from Supabase:', error.message);
       } else if (remoteUsers) {
-        // Map database columns if naming differs (e.g. password_hash, etc.)
         const formattedUsers: UserAccount[] = remoteUsers.map((u) => ({
           id: u.id,
           name: u.name,
@@ -57,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUsers(formattedUsers);
       }
 
-      // Check for saved session in localStorage (or keep session state managed dynamically)
+      // Check for saved session in localStorage
       const savedCurrentUser = localStorage.getItem('app_current_user');
       if (savedCurrentUser) {
         try {
@@ -98,15 +97,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = async (email: string, _pass: string): Promise<boolean> => {
+  const login = async (email: string, pass: string): Promise<boolean> => {
     try {
+      // Use .maybeSingle() to gracefully handle missing accounts without 406 errors
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('email', email.toLowerCase())
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
+        return false;
+      }
+
+      // Check password validation (supports plain text or basic comparison matching your DB schema)
+      if (data.password_hash && data.password_hash !== pass) {
         return false;
       }
 
@@ -139,17 +144,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .replace(/[._-]/g, ' ')
             .replace(/\b\w/g, (char) => char.toUpperCase());
 
-    // Check if user already exists in Supabase
+    // Use .maybeSingle() to prevent 406 error if user does not exist yet
     const { data: existingUser } = await supabase
       .from('users')
       .select('*')
       .eq('email', realEmail)
-      .single();
+      .maybeSingle();
 
     let targetUser: UserAccount;
 
     if (!existingUser) {
-      // Insert new user into Supabase
       const { data: newUserArray, error } = await supabase
         .from('users')
         .insert([
@@ -178,7 +182,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       setUsers((prev) => [...prev, targetUser]);
     } else {
-      // Update existing user name / google flag
       const { data: updatedArray, error } = await supabase
         .from('users')
         .update({ name: realName, is_google_user: true })
@@ -233,7 +236,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('app_current_user');
   };
 
-  const addAdminAccount = async (name: string, email: string, _pass: string) => {
+  const addAdminAccount = async (name: string, email: string, pass: string) => {
     const { data, error } = await supabase
       .from('users')
       .insert([
@@ -241,6 +244,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name,
           email: email.toLowerCase(),
           role: 'admin',
+          password_hash: pass,
           two_factor_enabled: false,
         },
       ])
