@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { ShieldCheck, Lock, Mail, Key, UserCheck } from 'lucide-react';
 
 export default function LoginPage() {
-  const { login, initiateGoogleOAuth, users, verify2FA } = useAuth();
+  const { login, initiateGoogleOAuth, verify2FA } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
@@ -16,22 +16,15 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    const savedUsersStr = localStorage.getItem('app_users');
-    const availableUsers = savedUsersStr ? JSON.parse(savedUsersStr) : users;
-    const targetUser = availableUsers.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
-
-    if (!targetUser) {
-      setError('Invalid credentials.');
-      return;
+    try {
+      const success = await login(email, password);
+      if (!success) {
+        setError('Invalid credentials or user not found.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('An error occurred during login.');
     }
-
-    if (targetUser.twoFactorEnabled) {
-      setPendingUser(targetUser);
-      return;
-    }
-
-    const success = await login(email, password);
-    if (!success) setError('Invalid credentials.');
   };
 
   const handleQuickLogin = async (quickEmail: string) => {
@@ -39,18 +32,14 @@ export default function LoginPage() {
     setEmail(quickEmail);
     setPassword('password123');
 
-    const savedUsersStr = localStorage.getItem('app_users');
-    const availableUsers = savedUsersStr ? JSON.parse(savedUsersStr) : users;
-    const targetUser = availableUsers.find((u: any) => u.email.toLowerCase() === quickEmail.toLowerCase());
-
-    if (targetUser?.twoFactorEnabled) {
-      setPendingUser(targetUser);
-      return;
-    }
-
-    const success = await login(quickEmail, 'password123');
-    if (!success) {
-      setError('Failed to log in with preset account.');
+    try {
+      const success = await login(quickEmail, 'password123');
+      if (!success) {
+        setError('Failed to log in with preset account.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('An error occurred during quick login.');
     }
   };
 
