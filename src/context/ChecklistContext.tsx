@@ -26,6 +26,7 @@ export interface Equipment {
   status: InventoryStatus;
   location: string;
   categoryColor: CategoryColor;
+  quantity: number;
   notes?: RemarkEntry[];
   isResolved?: boolean;
 }
@@ -80,7 +81,7 @@ interface AppContextType {
 
   inventory: Equipment[];
   addInventoryItem: (name: string, category: string, location: string, role: UserRole, categoryColor?: CategoryColor) => void;
-  editInventoryItem: (id: string, name: string, location: string, categoryColor: CategoryColor, role: UserRole) => void;
+  editInventoryItem: (id: string, name: string, location: string, categoryColor: CategoryColor, quantity: number,role: UserRole) => void;
   deleteInventoryItem: (id: string, role: UserRole) => void;
   updateInventoryStatus: (id: string, status: Equipment['status'], role: UserRole) => void;
 
@@ -494,7 +495,8 @@ const generateSundayChecklistFromInventory = async (role: UserRole) => {
     category: string, 
     location: string, 
     role: UserRole, 
-    categoryColor: CategoryColor = 'blue'
+    categoryColor: CategoryColor = 'blue',
+    quantity: number = 1
   ) => {
     if (!isAdminOrSuperadmin(role)) {
       alert('Permission Denied: Admins only!');
@@ -507,6 +509,7 @@ const generateSundayChecklistFromInventory = async (role: UserRole) => {
       status: 'available',
       location: location || 'Main Closet',
       categoryColor,
+      quantity,
       notes: [],
     };
     setInventory([newItem, ...inventory]);
@@ -518,6 +521,7 @@ const generateSundayChecklistFromInventory = async (role: UserRole) => {
     name: string,
     location: string,
     categoryColor: CategoryColor,
+    quantity: number,
     role: UserRole
   ) => {
     if (!isAdminOrSuperadmin(role)) {

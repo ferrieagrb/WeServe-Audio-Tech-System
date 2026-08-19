@@ -146,6 +146,7 @@ export default function ChecklistPage() {
     setInvCategory('Microphone');
     setInvLocation('');
     setInvColor('blue');
+    setInvQuantity(1);
     setIsAddInventoryModalOpen(false);
   };
 
@@ -154,14 +155,15 @@ export default function ChecklistPage() {
     setEditName(item.name);
     setEditLocation(item.location || '');
     setEditColor((item.categoryColor as CategoryColor) || 'blue');
+    setEditQuantity(item.quantity || 1);
   };
 
   const handleEditInventory = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingInventoryItem || !editName.trim()) return;
-    editInventoryItem(editingInventoryItem.id, editName.trim(), editLocation.trim(), editColor, userRole);
-    setEditingInventoryItem(null);
-  };
+  e.preventDefault();
+  if (!editingInventoryItem || !editName.trim()) return;
+  editInventoryItem(editingInventoryItem.id, editName.trim(), editLocation.trim(), editColor, editQuantity, userRole);
+  setEditingInventoryItem(null);
+};
 
   const handleCreateAdmin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -277,6 +279,9 @@ export default function ChecklistPage() {
 
   const activeSchedule = schedules.find(s => s.id === activeScheduleId && s.userId === currentUser?.id && !s.isCompleted);
   const isChecklistFormInvalid = activeTab === 'checklist' && (!remarksInput.trim() || !statusReqInput);
+
+  const [invQuantity, setInvQuantity] = useState<number>(1);
+  const [editQuantity, setEditQuantity] = useState<number>(1);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -562,6 +567,9 @@ export default function ChecklistPage() {
                             <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold ${colorStyle.bg} ${colorStyle.text}`}>
                               {item.category}
                             </span>
+                            <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-semibold border border-slate-200">
+                              Qty: {item.quantity || 1}
+                            </span>
                             {hasActiveRemarks && (
                               needsAction ? (
                                 <span className="text-[10px] px-2 py-0.5 bg-rose-100 text-rose-800 rounded-md font-semibold flex items-center gap-1 border border-rose-200">
@@ -770,6 +778,17 @@ export default function ChecklistPage() {
                   className="w-full border border-slate-300 px-3 py-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
+              <div>
+  <label className="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
+  <input
+    type="number"
+    min="1"
+    value={invQuantity} // (or editQuantity for the edit modal)
+    onChange={(e) => setInvQuantity(parseInt(e.target.value) || 1)} // (or setEditQuantity)
+    className="w-full border border-slate-300 px-3 py-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+    required
+  />
+</div>
 
               {/* Color Tag Selection */}
               <div>
@@ -852,6 +871,17 @@ export default function ChecklistPage() {
                   <option value="D.I. Box">D.I. Box</option>
                 </select>
               </div>
+              <div>
+  <label className="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
+  <input
+    type="number"
+    min="1"
+    value={invQuantity} // (or editQuantity for the edit modal)
+    onChange={(e) => setInvQuantity(parseInt(e.target.value) || 1)} // (or setEditQuantity)
+    className="w-full border border-slate-300 px-3 py-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+    required
+  />
+</div>
 
               {/* Color Tag Selection */}
               <div>
