@@ -1340,11 +1340,18 @@ export default function ChecklistPage() {
 
                             {!isSelf && (
                               <button
-                                onClick={() => {
-                                  if (deleteUserAccount) {
-                                    deleteUserAccount(u.id);
-                                  } else {
-                                    deleteAdminAccount(u.id);
+                                onClick={async () => {
+                                  if (window.confirm(`Are you sure you want to delete account: ${u.name}?`)) {
+                                    try {
+                                      if (deleteUserAccount) {
+                                        await deleteUserAccount(u.id);
+                                      } else if (deleteAdminAccount) {
+                                        await deleteAdminAccount(u.id);
+                                      }
+                                    } catch (err) {
+                                      console.error("Failed to delete user:", err);
+                                      alert("Error deleting user from database.");
+                                    }
                                   }
                                 }}
                                 className="text-slate-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors"
