@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/supabaseClient'; // Make sure this points to your supabase client file
+import { supabase } from '@/lib/supabase'; // Make sure this points to your supabase client file
 
 export type UserRole = 'superadmin' | 'admin' | 'volunteer';
 
