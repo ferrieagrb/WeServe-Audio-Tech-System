@@ -4,6 +4,7 @@ import './globals.css';
 import {Nunito} from 'next/font/google';
 import { Roboto } from 'next/font/google';
 import type { Metadata } from 'next';
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -21,6 +22,9 @@ const roboto = Roboto({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${nunito.variable} ${roboto.variable}`}>
+      <head>
+        <SpeedInsights />
+      </head>
       <body className="font-nunito font-roboto">
         <AuthProvider>
           <AppProvider>
