@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [pendingUser, setPendingUser] = useState<any>(null);
   const [error, setError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -30,14 +30,14 @@ export default function LoginPage() {
       return;
     }
 
-    const success = login(email, password);
+    const success = await login(email, password);
     if (!success) setError('Invalid credentials.');
   };
 
-  const handleQuickLogin = (quickEmail: string) => {
+  const handleQuickLogin = async (quickEmail: string) => {
     setError('');
     setEmail(quickEmail);
-    setPassword('password');
+    setPassword('password123');
 
     const savedUsersStr = localStorage.getItem('app_users');
     const availableUsers = savedUsersStr ? JSON.parse(savedUsersStr) : users;
@@ -48,18 +48,18 @@ export default function LoginPage() {
       return;
     }
 
-    const success = login(quickEmail, 'password');
+    const success = await login(quickEmail, 'password123');
     if (!success) {
       setError('Failed to log in with preset account.');
     }
   };
 
-  const handleVerify2FA = (e: React.FormEvent) => {
+  const handleVerify2FA = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pendingUser) return;
 
     if (verify2FA(pendingUser.id, twoFactorCode)) {
-      login(pendingUser.email, password);
+      await login(pendingUser.email, password);
     } else {
       setError('Invalid 2FA code. Please try again.');
     }
