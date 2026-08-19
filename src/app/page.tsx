@@ -116,6 +116,46 @@ export default function ChecklistPage() {
   const [adminNoteInput, setAdminNoteInput] = useState('');
   const [statusReqInput, setStatusReqInput] = useState<InventoryStatus | ''>(''); 
 
+  // Real-time calculation for active schedule based on current date and time
+  useEffect(() => {
+    const checkRealTimeSchedule = () => {
+      const now = new Date();
+      // Format current date as YYYY-MM-DD
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const currentDateStr = `${year}-${month}-${day}`;
+
+      // Current time in minutes from midnight
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+      const currentActiveSession = schedules.find((session) => {
+        if (session.isCompleted || session.date !== currentDateStr) return false;
+        
+        const [startHour, startMin] = session.startTime.split(':').map(Number);
+        const [endHour, endMin] = session.endTime.split(':').map(Number);
+        const startMinutes = startHour * 60 + startMin;
+        const endMinutes = endHour * 60 + endMin;
+
+        return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+      });
+
+      if (currentActiveSession) {
+        if (activeScheduleId !== currentActiveSession.id) {
+          setActiveScheduleId(currentActiveSession.id);
+        }
+      } else {
+        if (activeScheduleId !== null) {
+          setActiveScheduleId(null as any);
+        }
+      }
+    };
+
+    checkRealTimeSchedule();
+    const interval = setInterval(checkRealTimeSchedule, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, [schedules, activeScheduleId, setActiveScheduleId]);
+
   if (!mounted) return null;
   if (!currentUser) return <LoginPage />;
 
@@ -162,11 +202,11 @@ export default function ChecklistPage() {
   };
 
   const handleEditInventory = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!editingInventoryItem || !editName.trim()) return;
-  editInventoryItem(editingInventoryItem.id, editName.trim(), editLocation.trim(), editColor, editQuantity, userRole);
-  setEditingInventoryItem(null);
-};
+    e.preventDefault();
+    if (!editingInventoryItem || !editName.trim()) return;
+    editInventoryItem(editingInventoryItem.id, editName.trim(), editLocation.trim(), editColor, editQuantity, userRole);
+    setEditingInventoryItem(null);
+  };
 
   const handleCreateAdmin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -280,10 +320,8 @@ export default function ChecklistPage() {
     return entries.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   };
 
-  const activeSchedule = schedules.find(s => s.id === activeScheduleId && s.userId === currentUser?.id && !s.isCompleted);
+  const activeSchedule = schedules.find(s => s.id === activeScheduleId && !s.isCompleted);
   const isChecklistFormInvalid = activeTab === 'checklist' && (!remarksInput.trim() || !statusReqInput);
-
-
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -414,7 +452,7 @@ export default function ChecklistPage() {
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
                   <span className="text-xs font-semibold text-indigo-900">
-                    Scheduled for {activeSchedule.userName} on {activeSchedule.date} ({activeSchedule.startTime} - {activeSchedule.endTime})
+                    Real-time Active Session for {activeSchedule.userName} ({activeSchedule.date} | {activeSchedule.startTime} - {activeSchedule.endTime})
                   </span>
                 </div>
                 <button
@@ -666,7 +704,7 @@ export default function ChecklistPage() {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h1 className="text-2xl font-bold">User Schedules & Summaries</h1>
-                <p className="text-sm text-slate-500">Manage user schedule sessions and checklist results</p>
+                <p className="text-sm text-slate-500">Real-time schedule sessions and checklist results</p>
               </div>
 
               {isAdmin && (
@@ -700,7 +738,7 @@ export default function ChecklistPage() {
                             <span className="font-bold text-sm text-slate-800">{session.userName}</span>
                             {isActive && (
                               <span className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-                                Active Session
+                                Active Session (Real-Time)
                               </span>
                             )}
                             {session.isCompleted && (
@@ -717,15 +755,6 @@ export default function ChecklistPage() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          {!isActive && (
-                            <button
-                              onClick={() => setActiveScheduleId(session.id)}
-                              className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg shadow-sm"
-                            >
-                              Set Active
-                            </button>
-                          )}
-
                           <button
                             onClick={() => setSelectedSummarySession(session)}
                             className="px-3 py-1.5 text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg flex items-center gap-1"
@@ -784,16 +813,16 @@ export default function ChecklistPage() {
                 />
               </div>
               <div>
-  <label className="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
-  <input
-    type="number"
-    min="1"
-    value={invQuantity} // (or editQuantity for the edit modal)
-    onChange={(e) => setInvQuantity(parseInt(e.target.value) || 1)} // (or setEditQuantity)
-    className="w-full border border-slate-300 px-3 py-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-    required
-  />
-</div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={editQuantity}
+                  onChange={(e) => setEditQuantity(parseInt(e.target.value) || 1)}
+                  className="w-full border border-slate-300 px-3 py-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
+                />
+              </div>
 
               {/* Color Tag Selection */}
               <div>
@@ -877,16 +906,16 @@ export default function ChecklistPage() {
                 </select>
               </div>
               <div>
-  <label className="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
-  <input
-    type="number"
-    min="1"
-    value={invQuantity} // (or editQuantity for the edit modal)
-    onChange={(e) => setInvQuantity(parseInt(e.target.value) || 1)} // (or setEditQuantity)
-    className="w-full border border-slate-300 px-3 py-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-    required
-  />
-</div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={invQuantity}
+                  onChange={(e) => setInvQuantity(parseInt(e.target.value) || 1)}
+                  className="w-full border border-slate-300 px-3 py-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
+                />
+              </div>
 
               {/* Color Tag Selection */}
               <div>
