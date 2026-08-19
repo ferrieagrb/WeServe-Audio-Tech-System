@@ -5,6 +5,7 @@ import {Nunito} from 'next/font/google';
 import { Roboto } from 'next/font/google';
 import type { Metadata } from 'next';
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from '@vercel/analytics/next';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </AppProvider>
         </AuthProvider>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
