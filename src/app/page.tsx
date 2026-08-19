@@ -351,7 +351,8 @@ export default function ChecklistPage() {
                 <span>Manage Accounts</span>
               </button>
             )}
-            <span className="text-xs text-slate-600 hidden sm:inline">{userName}</span>
+            {/* Account Name shown everywhere now (removed hidden sm:inline constraint) */}
+            <span className="text-xs font-medium text-slate-700">{userName}</span>
             <button
               onClick={logout}
               className="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
@@ -364,6 +365,17 @@ export default function ChecklistPage() {
       </header>
             
       <main className="max-w-4xl mx-auto p-4 sm:p-6">
+        {/* Welcome Greeting Banner under Navbar */}
+        <div className="mb-4 bg-white border border-slate-200 px-4 py-3 rounded-xl shadow-sm flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-slate-800">Welcome, {userName}!</h2>
+            <p className="text-xs text-slate-500">Logged in as <span className="capitalize font-semibold text-slate-700">{userRole}</span></p>
+          </div>
+          <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100 hidden sm:inline-block">
+            Audio Tech Ministry Portal
+          </span>
+        </div>
+
         {/* TABS */}
         <div className="pb-5 text-center">
           <span className="font-bold text-2xl font-roboto">Audio Tech Ministry</span>
