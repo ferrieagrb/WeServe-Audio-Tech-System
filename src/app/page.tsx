@@ -481,6 +481,9 @@ export default function ChecklistPage() {
                             <p className={`font-semibold text-sm ${item.isChecked ? 'line-through text-slate-400' : 'text-slate-800'}`}>
                               {item.gearName}
                             </p>
+                            <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-semibold border border-slate-200">
+                              Qty: {item.quantity || 1}
+                            </span>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${colorStyle.bg} ${colorStyle.text}`}>
                                 {item.category}
