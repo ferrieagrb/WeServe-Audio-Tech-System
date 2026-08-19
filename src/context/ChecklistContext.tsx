@@ -236,20 +236,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     saveChecklist(resetList);
   };
 
-  const generateSundayChecklistFromInventory = async (role: UserRole) => {
-    if (!isAdminOrSuperadmin(role)) {
-      alert('Permission Denied: Admins only!');
-      return;
-    }
-    const inventoryTasks: ExtendedChecklistItem[] = inventory.map((item) => ({
-      id: `c_inv_${item.id}_${Date.now()}`,
-      inventoryItemId: item.id,
-      gearName: `Check ${item.name} (${item.location || 'Main Closet'})`,
-      category: item.category,
-      isChecked: false,
-    }));
-    saveChecklist(inventoryTasks);
-  };
+  // Inside your ChecklistContext implementation (where generateSundayChecklistFromInventory is defined)
+const generateSundayChecklistFromInventory = (userRole: string) => {
+  setChecklist((prevChecklist) => {
+    // Map existing gearNames or inventoryIds to avoid duplicates
+    const existingNames = new Set(prevChecklist.map(item => item.gearName.toLowerCase()));
+    
+    const newItemsFromInventory = inventory
+      .filter(inv => !existingNames.has(inv.name.toLowerCase()))
+      .map(inv => ({
+        id: `chk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        gearName: inv.name,
+        category: inv.category,
+        inventoryItemId: inv.id,
+        isChecked: false,
+      }));
+
+    return [...prevChecklist, ...newItemsFromInventory];
+  });
+};
 
   const updateTaskDetails = (
     id: string,
