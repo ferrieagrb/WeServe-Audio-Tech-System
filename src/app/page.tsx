@@ -70,6 +70,9 @@ export default function ChecklistPage() {
     submitScheduleChecklist
   } = useApp();
 
+  const [invQuantity, setInvQuantity] = useState<number>(1);
+  const [editQuantity, setEditQuantity] = useState<number>(1);
+
   const [activeTab, setActiveTab] = useState<'checklist' | 'inventory' | 'schedules'>('checklist'); 
 
   // Modal States
@@ -280,8 +283,7 @@ export default function ChecklistPage() {
   const activeSchedule = schedules.find(s => s.id === activeScheduleId && s.userId === currentUser?.id && !s.isCompleted);
   const isChecklistFormInvalid = activeTab === 'checklist' && (!remarksInput.trim() || !statusReqInput);
 
-  const [invQuantity, setInvQuantity] = useState<number>(1);
-  const [editQuantity, setEditQuantity] = useState<number>(1);
+
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
