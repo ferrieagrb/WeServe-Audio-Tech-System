@@ -99,19 +99,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, pass: string): Promise<boolean> => {
     try {
-      // Use .maybeSingle() to gracefully handle missing accounts without 406 errors[cite: 3, 7]
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('email', email.toLowerCase())
         .maybeSingle();
 
+      console.log("DEBUG LOGIN - Fetched Data:", data);
+      console.log("DEBUG LOGIN - Error:", error);
+      console.log("DEBUG LOGIN - Entered Password:", pass);
+      console.log("DEBUG LOGIN - DB Password Hash:", data?.password_hash);
+
       if (error || !data) {
+        console.log("Login failed: User not found or error");
         return false;
       }
 
-      // Check password validation against database[cite: 7]
       if (data.password_hash && data.password_hash !== pass) {
+        console.log("Login failed: Password mismatch");
         return false;
       }
 
@@ -129,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('app_current_user', JSON.stringify(userAccount));
       return true;
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('Login error exception:', err);
       return false;
     }
   };
