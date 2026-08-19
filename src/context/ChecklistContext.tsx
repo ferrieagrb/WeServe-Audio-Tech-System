@@ -105,7 +105,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async function fetchSupabaseData() {
       try {
         const { data: checklistData, error: checklistError } = await supabase
-          .from('ChecklistItem')
+          .from('checklist')
           .select('*');
         if (checklistError) throw checklistError;
         if (checklistData) setChecklist(checklistData);
