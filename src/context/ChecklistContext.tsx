@@ -40,6 +40,7 @@ export interface ChecklistItem {
 
 export interface ExtendedChecklistItem extends ChecklistItem {
   remarks?: string;
+  quantity?: number;
   remarksHistory?: RemarkEntry[];
   requestedStatus?: InventoryStatus;
   resolutionRemark?: string;
