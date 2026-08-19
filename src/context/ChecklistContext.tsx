@@ -237,24 +237,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Inside your ChecklistContext implementation (where generateSundayChecklistFromInventory is defined)
-const generateSundayChecklistFromInventory = (userRole: string) => {
-  setChecklist((prevChecklist) => {
-    // Map existing gearNames or inventoryIds to avoid duplicates
-    const existingNames = new Set(prevChecklist.map(item => item.gearName.toLowerCase()));
-    
-    const newItemsFromInventory = inventory
-      .filter(inv => !existingNames.has(inv.name.toLowerCase()))
-      .map(inv => ({
-        id: `chk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        gearName: `Check ${inv.name}`,
-        category: inv.category,
-        inventoryItemId: inv.id,
-        isChecked: false,
-      }));
+const generateSundayChecklistFromInventory = async (role: UserRole) => {
+    if (!isAdminOrSuperadmin(role)) {
+      alert('Permission Denied: Admins only!');
+      return;
+    }
 
-    return [...prevChecklist, ...newItemsFromInventory];
-  });
-};
+    setChecklist((prevChecklist) => {
+      // Create sets to track both existing inventory IDs and normalized gear names to prevent duplicates
+      const existingInventoryIds = new Set(
+        prevChecklist.map(item => item.inventoryItemId).filter(Boolean)
+      );
+      const existingGearNames = new Set(
+        prevChecklist.map(item => item.gearName.toLowerCase().trim())
+      );
+
+      const newItemsFromInventory: ExtendedChecklistItem[] = [];
+
+      inventory.forEach(inv => {
+        const matchesId = inv.id && existingInventoryIds.has(inv.id);
+        const expectedName = `Check ${inv.name}`.toLowerCase().trim();
+        const matchesName = existingGearNames.has(expectedName) || existingGearNames.has(inv.name.toLowerCase().trim());
+
+        // Only add if it doesn't already exist in the checklist by ID or Name
+        if (!matchesId && !matchesName) {
+          newItemsFromInventory.push({
+            id: `chk_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+            gearName: `Check ${inv.name}`,
+            category: inv.category,
+            inventoryItemId: inv.id,
+            isChecked: false,
+          });
+        }
+      });
+
+      if (newItemsFromInventory.length === 0) {
+        return prevChecklist; // No new items to add
+      }
+
+      const updatedList = [...prevChecklist, ...newItemsFromInventory];
+      
+      // Persist the newly added items to Supabase
+      (async () => {
+        for (const newItem of newItemsFromInventory) {
+          await supabase.from('checklist').upsert(newItem);
+        }
+      })();
+
+      return updatedList;
+    });
+  };
 
   const updateTaskDetails = (
     id: string,
