@@ -246,7 +246,7 @@ const generateSundayChecklistFromInventory = (userRole: string) => {
       .filter(inv => !existingNames.has(inv.name.toLowerCase()))
       .map(inv => ({
         id: `chk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        gearName: inv.name,
+        gearName: `Check ${inv.name} (${inv.location || 'Main Closet'})`,
         category: inv.category,
         inventoryItemId: inv.id,
         isChecked: false,
