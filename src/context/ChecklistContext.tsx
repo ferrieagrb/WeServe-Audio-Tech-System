@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { INITIAL_CHECKLIST, INITIAL_EQUIPMENT, ChecklistItem, Equipment } from '@/lib/mockData';
+import { supabase } from '@/lib/supabase';
 
 export type InventoryItem = Equipment;
 export type UserRole = 'superadmin' | 'admin' | 'volunteer';
@@ -17,6 +17,24 @@ export interface RemarkEntry {
   requestedStatus?: InventoryStatus;
   isApproved?: boolean;
   isPendingResolution?: boolean;
+}
+
+export interface Equipment {
+  id: string;
+  name: string;
+  category: string;
+  status: InventoryStatus;
+  location: string;
+  categoryColor: CategoryColor;
+  notes?: RemarkEntry[];
+  isResolved?: boolean;
+}
+
+export interface ChecklistItem {
+  id: string;
+  gearName: string;
+  category: string;
+  isChecked: boolean;
 }
 
 export interface ExtendedChecklistItem extends ChecklistItem {
@@ -77,44 +95,43 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [checklist, setChecklist] = useState<ExtendedChecklistItem[]>(INITIAL_CHECKLIST);
-  const [inventory, setInventory] = useState<Equipment[]>(INITIAL_EQUIPMENT);
+  const [checklist, setChecklist] = useState<ExtendedChecklistItem[]>([]);
+  const [inventory, setInventory] = useState<Equipment[]>([]);
   const [schedules, setSchedules] = useState<ScheduleSession[]>([]);
   const [activeScheduleId, setActiveScheduleId] = useState<string | null>(null);
 
+  // Fetch initial data from Supabase
   useEffect(() => {
-    const savedChecklist = localStorage.getItem('audio_tech_checklist');
-    if (savedChecklist) {
+    async function fetchSupabaseData() {
       try {
-        setChecklist(JSON.parse(savedChecklist));
-      } catch (e) {
-        console.error('Failed to parse saved checklist:', e);
-      }
-    }
+        const { data: checklistData, error: checklistError } = await supabase
+          .from('ChecklistItem')
+          .select('*');
+        if (checklistError) throw checklistError;
+        if (checklistData) setChecklist(checklistData);
 
-    const savedInventory = localStorage.getItem('audio_tech_inventory');
-    if (savedInventory) {
-      try {
-        setInventory(JSON.parse(savedInventory));
-      } catch (e) {
-        console.error('Failed to parse saved inventory:', e);
-      }
-    }
+        const { data: inventoryData, error: inventoryError } = await supabase
+          .from('Equipment')
+          .select('*');
+        if (inventoryError) throw inventoryError;
+        if (inventoryData) setInventory(inventoryData);
 
-    const savedSchedules = localStorage.getItem('audio_tech_schedules');
-    if (savedSchedules) {
-      try {
-        const parsedSchedules = JSON.parse(savedSchedules);
-        setSchedules(parsedSchedules);
-        if (parsedSchedules.length > 0) {
-          setActiveScheduleId(parsedSchedules[0].id);
-        } else {
-          setActiveScheduleId(null);
+        const { data: schedulesData, error: schedulesError } = await supabase
+          .from('schedules')
+          .select('*');
+        if (schedulesError) throw schedulesError;
+        if (schedulesData) {
+          setSchedules(schedulesData);
+          if (schedulesData.length > 0) {
+            setActiveScheduleId(schedulesData[0].id);
+          }
         }
       } catch (e) {
-        console.error('Failed to parse saved schedules:', e);
+        console.error('Failed to fetch data from Supabase:', e);
       }
     }
+
+    fetchSupabaseData();
   }, []);
 
   // Timer check every 30 seconds to auto-submit 1 minute after end time
@@ -141,22 +158,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(timer);
   }, [schedules, checklist]);
 
-  const saveChecklist = (newList: ExtendedChecklistItem[]) => {
+  const saveChecklist = async (newList: ExtendedChecklistItem[]) => {
     setChecklist(newList);
-    localStorage.setItem('audio_tech_checklist', JSON.stringify(newList));
-    window.dispatchEvent(new Event('local-storage-update'));
+    // Sync updates to Supabase (adjust table/upsert structure to match your DB layout)
+    for (const item of newList) {
+      await supabase.from('checklist').upsert(item);
+    }
   };
 
-  const saveInventory = (newList: Equipment[]) => {
+  const saveInventory = async (newList: Equipment[]) => {
     setInventory(newList);
-    localStorage.setItem('audio_tech_inventory', JSON.stringify(newList));
-    window.dispatchEvent(new Event('local-storage-update'));
+    for (const item of newList) {
+      await supabase.from('equipment').upsert(item);
+    }
   };
 
-  const saveSchedules = (newSchedules: ScheduleSession[]) => {
+  const saveSchedules = async (newSchedules: ScheduleSession[]) => {
     setSchedules(newSchedules);
-    localStorage.setItem('audio_tech_schedules', JSON.stringify(newSchedules));
-    window.dispatchEvent(new Event('local-storage-update'));
+    for (const session of newSchedules) {
+      await supabase.from('schedules').upsert(session);
+    }
   };
 
   const isAdminOrSuperadmin = (role: UserRole) => role === 'admin' || role === 'superadmin';
@@ -173,7 +194,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addChecklistItem = (gearName: string, category: string, role: UserRole) => {
+  const addChecklistItem = async (gearName: string, category: string, role: UserRole) => {
     if (!isAdminOrSuperadmin(role)) {
       alert('Permission Denied: Admins only!');
       return;
@@ -185,15 +206,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isChecked: false,
     };
     const updated = [...checklist, newItem];
-    saveChecklist(updated);
+    setChecklist(updated);
+    await supabase.from('checklist').insert([newItem]);
   };
 
-  const deleteChecklistItem = (id: string, role: UserRole) => {
+  const deleteChecklistItem = async (id: string, role: UserRole) => {
     if (!isAdminOrSuperadmin(role)) {
       alert('Permission Denied: Admins only!');
       return;
     }
-    saveChecklist(checklist.filter((item) => item.id !== id));
+    setChecklist(checklist.filter((item) => item.id !== id));
+    await supabase.from('checklist').delete().eq('id', id);
   };
 
   const resetAllChecklist = (role: UserRole) => {
@@ -213,7 +236,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     saveChecklist(resetList);
   };
 
-  const generateSundayChecklistFromInventory = (role: UserRole) => {
+  const generateSundayChecklistFromInventory = async (role: UserRole) => {
     if (!isAdminOrSuperadmin(role)) {
       alert('Permission Denied: Admins only!');
       return;
@@ -429,7 +452,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const addInventoryItem = (
+  const addInventoryItem = async (
     name: string, 
     category: string, 
     location: string, 
@@ -449,10 +472,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       categoryColor,
       notes: [],
     };
-    saveInventory([newItem, ...inventory]);
+    setInventory([newItem, ...inventory]);
+    await supabase.from('equipment').insert([newItem]);
   };
 
-  const editInventoryItem = (
+  const editInventoryItem = async (
     id: string,
     name: string,
     location: string,
@@ -463,32 +487,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
       alert('Permission Denied: Admins only!');
       return;
     }
-    saveInventory(
-      inventory.map((item) =>
-        item.id === id ? { ...item, name, location, categoryColor } : item
-      )
+    const updated = inventory.map((item) =>
+      item.id === id ? { ...item, name, location, categoryColor } : item
     );
+    saveInventory(updated);
   };
 
-  const deleteInventoryItem = (id: string, role: UserRole) => {
+  const deleteInventoryItem = async (id: string, role: UserRole) => {
     if (!isAdminOrSuperadmin(role)) {
       alert('Permission Denied: Admins only!');
       return;
     }
-    saveInventory(inventory.filter((item) => item.id !== id));
+    setInventory(inventory.filter((item) => item.id !== id));
+    await supabase.from('equipment').delete().eq('id', id);
   };
 
-  const updateInventoryStatus = (id: string, status: Equipment['status'], role: UserRole) => {
+  const updateInventoryStatus = async (id: string, status: Equipment['status'], role: UserRole) => {
     if (!isAdminOrSuperadmin(role)) {
       alert('Permission Denied: Admins only!');
       return;
     }
-    saveInventory(
-      inventory.map((item) => (item.id === id ? { ...item, status } : item))
-    );
+    const updated = inventory.map((item) => (item.id === id ? { ...item, status } : item));
+    saveInventory(updated);
   };
 
-  const addScheduleSession = (userId: string, userName: string, date: string, startTime: string, endTime: string, role: UserRole) => {
+  const addScheduleSession = async (userId: string, userName: string, date: string, startTime: string, endTime: string, role: UserRole) => {
     if (!isAdminOrSuperadmin(role)) {
       alert('Permission Denied: Admins only!');
       return;
@@ -512,13 +535,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const deleteScheduleSession = (id: string, role: UserRole) => {
+  const deleteScheduleSession = async (id: string, role: UserRole) => {
     if (!isAdminOrSuperadmin(role)) {
       alert('Permission Denied: Admins only!');
       return;
     }
     const filtered = schedules.filter(s => s.id !== id);
-    saveSchedules(filtered);
+    setSchedules(filtered);
+    await supabase.from('schedules').delete().eq('id', id);
     if (activeScheduleId === id) {
       setActiveScheduleId(filtered.length > 0 ? filtered[0].id : null);
     }
