@@ -105,18 +105,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('email', email.toLowerCase())
         .maybeSingle();
 
-      console.log("DEBUG LOGIN - Fetched Data:", data);
-      console.log("DEBUG LOGIN - Error:", error);
-      console.log("DEBUG LOGIN - Entered Password:", pass);
-      console.log("DEBUG LOGIN - DB Password Hash:", data?.password_hash);
-
       if (error || !data) {
-        console.log("Login failed: User not found or error");
         return false;
       }
 
       if (data.password_hash && data.password_hash !== pass) {
-        console.log("Login failed: Password mismatch");
         return false;
       }
 
@@ -149,7 +142,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .replace(/[._-]/g, ' ')
             .replace(/\b\w/g, (char) => char.toUpperCase());
 
-    // Use .maybeSingle() to prevent 406 error if user does not exist yet[cite: 3, 7]
     const { data: existingUser } = await supabase
       .from('users')
       .select('*')
@@ -273,6 +265,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Handles deletion for any account type (admin or general user) uniformly
   const deleteAdminAccount = async (id: string) => {
     const { error } = await supabase.from('users').delete().eq('id', id);
 
@@ -282,6 +275,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     setUsers((prev) => prev.filter((u) => u.id !== id));
+
+    // If the currently signed-in user deleted their own account, force logout
+    if (currentUser && currentUser.id === id) {
+      logout();
+    }
   };
 
   const updateUserRole = async (id: string, role: UserRole) => {
