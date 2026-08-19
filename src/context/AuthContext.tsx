@@ -99,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, pass: string): Promise<boolean> => {
     try {
-      // Use .maybeSingle() to gracefully handle missing accounts without 406 errors
+      // Use .maybeSingle() to gracefully handle missing accounts without 406 errors[cite: 3, 7]
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -110,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
 
-      // Check password validation (supports plain text or basic comparison matching your DB schema)
+      // Check password validation against database[cite: 7]
       if (data.password_hash && data.password_hash !== pass) {
         return false;
       }
@@ -144,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .replace(/[._-]/g, ' ')
             .replace(/\b\w/g, (char) => char.toUpperCase());
 
-    // Use .maybeSingle() to prevent 406 error if user does not exist yet
+    // Use .maybeSingle() to prevent 406 error if user does not exist yet[cite: 3, 7]
     const { data: existingUser } = await supabase
       .from('users')
       .select('*')
