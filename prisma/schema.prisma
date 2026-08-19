@@ -1,0 +1,59 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  superadmin
+  admin
+  volunteer
+}
+
+enum InventoryStatus {
+  available
+  in_use
+  needs_repair
+  broken
+}
+
+model Equipment {
+  id            String          @id @default(uuid())
+  name          String
+  category      String
+  status        InventoryStatus @default(available)
+  location      String
+  categoryColor String?
+  notes         RemarkEntry[]   @relation("EquipmentRemarks")
+  createdAt     DateTime        @default(now())
+}
+
+model ChecklistItem {
+  id             String          @id @default(uuid())
+  gearName       String
+  category       String
+  isChecked      Boolean         @default(false)
+  remarks        String?
+  requestedStatus InventoryStatus?
+  remarksHistory RemarkEntry[]   @relation("ChecklistRemarks")
+  createdAt      DateTime        @default(now())
+}
+
+model RemarkEntry {
+  id              String           @id @default(uuid())
+  author          String
+  role            UserRole
+  text            String
+  requestedStatus InventoryStatus?
+  createdAt       String
+
+  // Relations linking remarks back to Equipment or ChecklistItems
+  equipmentId     String?
+  equipment       Equipment?       @relation("EquipmentRemarks", fields: [equipmentId], references: [id], onDelete: Cascade)
+  
+  checklistItemId String?
+  checklistItem   ChecklistItem?   @relation("ChecklistRemarks", fields: [checklistItemId], references: [id], onDelete: Cascade)
+}
