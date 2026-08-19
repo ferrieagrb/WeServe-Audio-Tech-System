@@ -120,13 +120,11 @@ export default function ChecklistPage() {
   useEffect(() => {
     const checkRealTimeSchedule = () => {
       const now = new Date();
-      // Format current date as YYYY-MM-DD
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
       const day = String(now.getDate()).padStart(2, '0');
       const currentDateStr = `${year}-${month}-${day}`;
 
-      // Current time in minutes from midnight
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
       const currentActiveSession = schedules.find((session) => {
@@ -152,7 +150,7 @@ export default function ChecklistPage() {
     };
 
     checkRealTimeSchedule();
-    const interval = setInterval(checkRealTimeSchedule, 30000); // Check every 30 seconds
+    const interval = setInterval(checkRealTimeSchedule, 30000);
     return () => clearInterval(interval);
   }, [schedules, activeScheduleId, setActiveScheduleId]);
 
@@ -324,474 +322,483 @@ export default function ChecklistPage() {
   const isChecklistFormInvalid = activeTab === 'checklist' && (!remarksInput.trim() || !statusReqInput);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      {/* HEADER */}
-      <header className="bg-white border-b border-slate-200 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <img src="https://church.victory.org.ph/assets/images/victory-logo.png" alt="Victory Logo" className="h-9 w-auto" />
-            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-              isSuperadmin 
-                ? 'bg-purple-100 text-purple-700 border border-purple-200' 
-                : isAdmin 
-                ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' 
-                : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-            }`}>
-              {userRole}
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between">
+      <div>
+        {/* HEADER */}
+        <header className="bg-white border-b border-slate-200 px-4 py-3">
+          <div className="max-w-4xl mx-auto flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <img src="https://church.victory.org.ph/assets/images/victory-logo.png" alt="Victory Logo" className="h-9 w-auto" />
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                isSuperadmin 
+                  ? 'bg-purple-100 text-purple-700 border border-purple-200' 
+                  : isAdmin 
+                  ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' 
+                  : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+              }`}>
+                {userRole}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {isSuperadmin && (
+                <button
+                  onClick={() => setIsManageAdminsOpen(true)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm transition-colors"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Manage Accounts</span>
+                </button>
+              )}
+              <span className="text-xs font-medium text-slate-700">{userName}</span>
+              <button
+                onClick={logout}
+                className="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </header>
+              
+        <main className="max-w-4xl mx-auto p-4 sm:p-6">
+          {/* Welcome Greeting Banner under Navbar */}
+          <div className="mb-4 bg-white border border-slate-200 px-4 py-3 rounded-xl shadow-sm flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-slate-800">Welcome, {userName}!</h2>
+              <p className="text-xs text-slate-500">Logged in as <span className="capitalize font-semibold text-slate-700">{userRole}</span></p>
+            </div>
+            <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100 hidden sm:inline-block">
+              Audio Tech Ministry Portal
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            {isSuperadmin && (
-              <button
-                onClick={() => setIsManageAdminsOpen(true)}
-                className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm transition-colors"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Manage Accounts</span>
-              </button>
-            )}
-            {/* Account Name shown everywhere now (removed hidden sm:inline constraint) */}
-            <span className="text-xs font-medium text-slate-700">{userName}</span>
+          {/* TABS */}
+          <div className="pb-5 text-center">
+            <span className="font-bold text-2xl font-roboto">Audio Tech Ministry</span>
+          </div>
+          <div className="flex bg-slate-200 p-1 rounded-xl mb-6">
             <button
-              onClick={logout}
-              className="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
-              title="Sign Out"
+              onClick={() => setActiveTab('checklist')}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                activeTab === 'checklist' 
+                  ? 'bg-white text-slate-900 shadow-sm' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
             >
-              <LogOut className="w-4 h-4" />
+              <CheckSquare className="w-4 h-4" />
+              <span>Checklist</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('inventory')}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                activeTab === 'inventory' 
+                  ? 'bg-white text-slate-900 shadow-sm' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Box className="w-4 h-4" />
+              <span>Inventory</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('schedules')}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                activeTab === 'schedules' 
+                  ? 'bg-white text-slate-900 shadow-sm' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Calendar className="w-4 h-4" />
+              <span>Schedules ({schedules.length})</span>
             </button>
           </div>
-        </div>
-      </header>
-            
-      <main className="max-w-4xl mx-auto p-4 sm:p-6">
-        {/* Welcome Greeting Banner under Navbar */}
-        <div className="mb-4 bg-white border border-slate-200 px-4 py-3 rounded-xl shadow-sm flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-slate-800">Welcome, {userName}!</h2>
-            <p className="text-xs text-slate-500">Logged in as <span className="capitalize font-semibold text-slate-700">{userRole}</span></p>
-          </div>
-          <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100 hidden sm:inline-block">
-            Audio Tech Ministry Portal
-          </span>
-        </div>
 
-        {/* TABS */}
-        <div className="pb-5 text-center">
-          <span className="font-bold text-2xl font-roboto">Audio Tech Ministry</span>
-        </div>
-        <div className="flex bg-slate-200 p-1 rounded-xl mb-6">
-          <button
-            onClick={() => setActiveTab('checklist')}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-              activeTab === 'checklist' 
-                ? 'bg-white text-slate-900 shadow-sm' 
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <CheckSquare className="w-4 h-4" />
-            <span>Checklist</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('inventory')}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-              activeTab === 'inventory' 
-                ? 'bg-white text-slate-900 shadow-sm' 
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Box className="w-4 h-4" />
-            <span>Inventory</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('schedules')}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-              activeTab === 'schedules' 
-                ? 'bg-white text-slate-900 shadow-sm' 
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Calendar className="w-4 h-4" />
-            <span>Schedules ({schedules.length})</span>
-          </button>
-        </div>
+          {/* TAB 1: SUNDAY CHECKLIST */}
+          {activeTab === 'checklist' && (
+            <>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                  <h1 className="text-2xl font-roboto font-bold">Service Checklist</h1>
+                  <p className="text-sm text-slate-500">
+                    {activeSchedule ? `Active Session: ${activeSchedule.userName} (${activeSchedule.date} | ${activeSchedule.startTime} - ${activeSchedule.endTime})` : 'Service Checklist / Inventory'}
+                  </p>
+                </div>
 
-        {/* TAB 1: SUNDAY CHECKLIST */}
-        {activeTab === 'checklist' && (
-          <>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div>
-                <h1 className="text-2xl font-roboto font-bold">Service Checklist</h1>
-                <p className="text-sm text-slate-500">
-                  {activeSchedule ? `Active Session: ${activeSchedule.userName} (${activeSchedule.date} | ${activeSchedule.startTime} - ${activeSchedule.endTime})` : 'Service Checklist / Inventory'}
-                </p>
+                <div className="flex flex-wrap gap-2">
+                  {isAdmin && (
+                    <>
+                      <button
+                        onClick={() => generateSundayChecklistFromInventory(userRole)}
+                        className="bg-slate-800 text-white p-2 rounded-lg text-sm font-semibold hover:bg-slate-900 flex items-center shadow-sm"
+                        title="Sync from Inventory"
+                      >
+                        <RefreshCw className="w-4 h-4 mr-1" /> Sync
+                      </button>
+                      <button
+                        onClick={() => resetAllChecklist(userRole)}
+                        className="bg-white border border-slate-300 text-slate-700 p-2 rounded-lg text-sm font-semibold hover:bg-slate-100 flex items-center shadow-sm"
+                      >
+                        <RotateCcw className="w-4 h-4 mr-1" /> Reset
+                      </button>
+                      <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center hover:bg-indigo-700 shadow-sm"
+                      >
+                        <Plus className="w-4 h-4 mr-1" /> Add Task
+                      </button>
+                    </>
+                  )}
+                  {isVolunteer && (
+                    <div className="flex items-center text-emerald-700 text-xs bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 font-semibold">
+                      <UserCheck className="w-3.5 h-3.5 mr-1" /> Volunteer View
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                {isAdmin && (
-                  <>
-                    <button
-                      onClick={() => generateSundayChecklistFromInventory(userRole)}
-                      className="bg-slate-800 text-white p-2 rounded-lg text-sm font-semibold hover:bg-slate-900 flex items-center shadow-sm"
-                      title="Sync from Inventory"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-1" /> Sync
-                    </button>
-                    <button
-                      onClick={() => resetAllChecklist(userRole)}
-                      className="bg-white border border-slate-300 text-slate-700 p-2 rounded-lg text-sm font-semibold hover:bg-slate-100 flex items-center shadow-sm"
-                    >
-                      <RotateCcw className="w-4 h-4 mr-1" /> Reset
-                    </button>
-                    <button
-                      onClick={() => setIsAddModalOpen(true)}
-                      className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center hover:bg-indigo-700 shadow-sm"
-                    >
-                      <Plus className="w-4 h-4 mr-1" /> Add Task
-                    </button>
-                  </>
-                )}
-                {isVolunteer && (
-                  <div className="flex items-center text-emerald-700 text-xs bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 font-semibold">
-                    <UserCheck className="w-3.5 h-3.5 mr-1" /> Volunteer View
+              {activeSchedule && (
+                <div className="bg-indigo-50 border border-indigo-200 p-3 rounded-xl mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <span className="text-xs font-semibold text-indigo-900">
+                      Real-time Active Session for {activeSchedule.userName} ({activeSchedule.date} | {activeSchedule.startTime} - {activeSchedule.endTime})
+                    </span>
                   </div>
-                )}
-              </div>
-            </div>
+                  <button
+                    onClick={() => submitScheduleChecklist(activeSchedule.id)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm shrink-0"
+                  >
+                    Submit & Reset
+                  </button>
+                </div>
+              )}
 
-            {activeSchedule && (
-              <div className="bg-indigo-50 border border-indigo-200 p-3 rounded-xl mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
-                  <span className="text-xs font-semibold text-indigo-900">
-                    Real-time Active Session for {activeSchedule.userName} ({activeSchedule.date} | {activeSchedule.startTime} - {activeSchedule.endTime})
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6">
+                <div className="flex justify-between text-sm font-semibold mb-2">
+                  <span className="text-slate-800">Progress</span>
+                  <span className="text-slate-600">
+                    {completedCount} / {checklist.length} Completed
                   </span>
                 </div>
-                <button
-                  onClick={() => submitScheduleChecklist(activeSchedule.id)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm shrink-0"
-                >
-                  Submit & Reset
-                </button>
-              </div>
-            )}
 
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6">
-              <div className="flex justify-between text-sm font-semibold mb-2">
-                <span className="text-slate-800">Progress</span>
-                <span className="text-slate-600">
-                  {completedCount} / {checklist.length} Completed
-                </span>
-              </div>
-
-              <div className="w-full bg-slate-100 h-2.5 rounded-full ring-1 ring-slate-300 ring-offset-1 overflow-hidden">
-                <div
-                  className="bg-green-600 h-full transition-all duration-300"
-                  style={{
-                    width: checklist.length
-                      ? `${(completedCount / checklist.length) * 100}%`
-                      : '0%',
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {checklist.length === 0 ? (
-                <div className="text-center p-8 bg-white rounded-xl border border-dashed text-slate-400">
-                  No tasks in the checklist.
+                <div className="w-full bg-slate-100 h-2.5 rounded-full ring-1 ring-slate-300 ring-offset-1 overflow-hidden">
+                  <div
+                    className="bg-green-600 h-full transition-all duration-300"
+                    style={{
+                      width: checklist.length
+                        ? `${(completedCount / checklist.length) * 100}%`
+                        : '0%',
+                    }}
+                  />
                 </div>
-              ) : (
-                checklist.map((item) => {
-                  const matchedInv = inventory.find(
-                    (inv) => inv.id === item.inventoryItemId || inv.name.toLowerCase() === item.gearName.toLowerCase()
-                  );
-                  const itemColor = (matchedInv?.categoryColor as CategoryColor) || 'slate';
-                  const colorStyle = COLOR_MAP[itemColor];
+              </div>
 
-                  return (
-                    <div
-                      key={item.id}
-                      className={`p-4 rounded-xl border border-l-4 ${colorStyle.border} shadow-sm transition-colors ${
-                        item.isChecked ? 'bg-green-50/70 border-green-200 border-l-4 ' + colorStyle.border : 'bg-white border-l-4 ' + colorStyle.border
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <button
-                          type="button"
-                          onClick={() => toggleCheck(item.id, userRole)}
-                          className="flex items-center space-x-3 flex-1 text-left cursor-pointer focus:outline-none"
-                        >
-                          {item.isChecked ? (
-                            <CheckCircle2 className="w-6 h-6 text-green-600 shrink-0" />
-                          ) : (
-                            <Circle className="w-6 h-6 text-slate-300 shrink-0" />
-                          )}
-                          <div>
-                            <p className={`font-semibold text-sm ${item.isChecked ? 'line-through text-slate-400' : 'text-slate-800'}`}>
-                              {item.gearName}
-                            </p>
-                            <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-semibold border border-slate-200">
-                              Qty: {item.quantity || 1}
-                            </span>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${colorStyle.bg} ${colorStyle.text}`}>
+              <div className="space-y-3">
+                {checklist.length === 0 ? (
+                  <div className="text-center p-8 bg-white rounded-xl border border-dashed text-slate-400">
+                    No tasks in the checklist.
+                  </div>
+                ) : (
+                  checklist.map((item) => {
+                    const matchedInv = inventory.find(
+                      (inv) => inv.id === item.inventoryItemId || inv.name.toLowerCase() === item.gearName.toLowerCase()
+                    );
+                    const itemColor = (matchedInv?.categoryColor as CategoryColor) || 'slate';
+                    const colorStyle = COLOR_MAP[itemColor];
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={`p-4 rounded-xl border border-l-4 ${colorStyle.border} shadow-sm transition-colors ${
+                          item.isChecked ? 'bg-green-50/70 border-green-200 border-l-4 ' + colorStyle.border : 'bg-white border-l-4 ' + colorStyle.border
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() => toggleCheck(item.id, userRole)}
+                            className="flex items-center space-x-3 flex-1 text-left cursor-pointer focus:outline-none"
+                          >
+                            {item.isChecked ? (
+                              <CheckCircle2 className="w-6 h-6 text-green-600 shrink-0" />
+                            ) : (
+                              <Circle className="w-6 h-6 text-slate-300 shrink-0" />
+                            )}
+                            <div>
+                              <p className={`font-semibold text-sm ${item.isChecked ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                {item.gearName}
+                              </p>
+                              <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-semibold border border-slate-200">
+                                Qty: {item.quantity || 1}
+                              </span>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${colorStyle.bg} ${colorStyle.text}`}>
+                                  {item.category}
+                                </span>
+                                {matchedInv && (
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                    matchedInv.status === 'available' ? 'bg-emerald-100 text-emerald-700' :
+                                    matchedInv.status === 'in_use' ? 'bg-blue-100 text-blue-700' :
+                                    matchedInv.status === 'needs_repair' ? 'bg-amber-100 text-amber-700' :
+                                    'bg-red-100 text-red-700'
+                                  }`}>
+                                    {matchedInv.status.replace('_', ' ')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => openTaskModal(item)}
+                              className="text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                              title="Remarks / Notes"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </button>
+
+                            {isAdmin && (
+                              <button
+                                onClick={() => deleteChecklistItem(item.id, userRole)}
+                                className="text-slate-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </>
+          )}
+
+          {/* TAB 2: MASTER INVENTORY */}
+          {activeTab === 'inventory' && (
+            <>
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h1 className="text-2xl font-bold">Master Inventory</h1>
+                  <p className="text-sm text-slate-500">Equipment status, color categories, and consolidated remarks</p>
+                </div>
+
+                {isAdmin && (
+                  <button
+                    onClick={() => setIsAddInventoryModalOpen(true)}
+                    className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center hover:bg-indigo-700 shadow-sm"
+                  >
+                    <Plus className="w-4 h-4 mr-1" /> Add Equipment
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {inventory.length === 0 ? (
+                  <div className="text-center p-8 bg-white rounded-xl border border-dashed text-slate-400">
+                    No inventory items recorded.
+                  </div>
+                ) : (
+                  inventory.map((item) => {
+                    const remarksHistory = getInventoryRemarksHistory(item);
+                    
+                    const activeRemarks = remarksHistory.filter(r => r.isPendingResolution !== false);
+                    const hasActiveRemarks = activeRemarks.length > 0;
+                    const needsAction = item.status === 'needs_repair' || item.status === 'broken';
+
+                    const colorStyle = COLOR_MAP[(item.categoryColor as CategoryColor) || 'slate'];
+
+                    return (
+                      <div key={item.id} className={`p-4 bg-white rounded-xl border border-l-4 ${colorStyle.border} shadow-sm space-y-2`}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-sm text-slate-800">{item.name}</span>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold ${colorStyle.bg} ${colorStyle.text}`}>
                                 {item.category}
                               </span>
-                              {matchedInv && (
-                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                                  matchedInv.status === 'available' ? 'bg-emerald-100 text-emerald-700' :
-                                  matchedInv.status === 'in_use' ? 'bg-blue-100 text-blue-700' :
-                                  matchedInv.status === 'needs_repair' ? 'bg-amber-100 text-amber-700' :
-                                  'bg-red-100 text-red-700'
-                                }`}>
-                                  {matchedInv.status.replace('_', ' ')}
+                              <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-semibold border border-slate-200">
+                                Qty: {item.quantity || 1}
+                              </span>
+                              {hasActiveRemarks && (
+                                needsAction ? (
+                                  <span className="text-[10px] px-2 py-0.5 bg-rose-100 text-rose-800 rounded-md font-semibold flex items-center gap-1 border border-rose-200">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
+                                    Action Needed ({activeRemarks.length})
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] px-2 py-0.5 bg-blue-100 text-blue-800 rounded-md font-semibold flex items-center gap-1 border border-blue-200">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                    New Remark ({activeRemarks.length})
+                                  </span>
+                                )
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-400">Location: {item.location || 'Main Closet'}</p>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            {isAdmin ? (
+                              <select
+                                value={item.status}
+                                onChange={(e) => updateInventoryStatus(item.id, e.target.value as InventoryStatus, userRole)}
+                                className={`text-xs px-2.5 py-1 rounded-lg border font-semibold outline-none bg-white cursor-pointer ${
+                                  item.status === 'available' ? 'border-emerald-300 text-emerald-700 bg-emerald-50' :
+                                  item.status === 'in_use' ? 'border-blue-300 text-blue-700 bg-blue-50' :
+                                  item.status === 'needs_repair' ? 'border-amber-300 text-amber-700 bg-amber-50' :
+                                  'border-red-300 text-red-700 bg-red-50'
+                                }`}
+                              >
+                                <option value="available">Available</option>
+                                <option value="in_use">In Use</option>
+                                <option value="needs_repair">Needs Repair</option>
+                                <option value="broken">Broken</option>
+                              </select>
+                            ) : (
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                item.status === 'available' ? 'bg-emerald-100 text-emerald-700' :
+                                item.status === 'in_use' ? 'bg-blue-100 text-blue-700' :
+                                item.status === 'needs_repair' ? 'bg-amber-100 text-amber-700' :
+                                'bg-red-100 text-red-700'
+                              }`}>
+                                {item.status.replace('_', ' ')}
+                              </span>
+                            )}
+
+                            {isAdmin && (
+                              <button
+                                onClick={() => openEditInventoryModal(item)}
+                                className="text-slate-400 hover:text-indigo-600 p-1.5 rounded hover:bg-indigo-50 transition-colors"
+                                title="Edit Equipment Details"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => openTaskModal(item)}
+                              className={`relative p-1.5 rounded-lg transition-colors ${
+                                hasActiveRemarks 
+                                  ? (needsAction ? 'text-rose-600 bg-rose-50 hover:bg-rose-100' : 'text-blue-600 bg-blue-50 hover:bg-blue-100')
+                                  : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-100'
+                              }`}
+                              title="View / Edit Remarks"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </button>
+
+                            {isAdmin && (
+                              <button
+                                onClick={() => deleteInventoryItem(item.id, userRole)}
+                                className="text-slate-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </>
+          )}
+
+          {/* TAB 3: SCHEDULES & SUMMARIES */}
+          {activeTab === 'schedules' && (
+            <>
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h1 className="text-2xl font-bold">User Schedules & Summaries</h1>
+                  <p className="text-sm text-slate-500">Real-time schedule sessions and checklist results</p>
+                </div>
+
+                {isAdmin && (
+                  <button
+                    onClick={() => setIsAddScheduleModalOpen(true)}
+                    className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center hover:bg-indigo-700 shadow-sm"
+                  >
+                    <Plus className="w-4 h-4 mr-1" /> Schedule User
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {schedules.length === 0 ? (
+                  <div className="text-center p-8 bg-white rounded-xl border border-dashed text-slate-400">
+                    No schedules created yet.
+                  </div>
+                ) : (
+                  schedules.map((session) => {
+                    const isActive = activeScheduleId === session.id;
+                    return (
+                      <div 
+                        key={session.id} 
+                        className={`p-4 rounded-xl border shadow-sm transition-all ${
+                          isActive ? 'bg-indigo-50/50 border-indigo-300 ring-1 ring-indigo-300' : 'bg-white border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-slate-800">{session.userName}</span>
+                              {isActive && (
+                                <span className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                                  Active Session (Real-Time)
+                                </span>
+                              )}
+                              {session.isCompleted && (
+                                <span className="text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                                  Completed / Auto-Submitted
                                 </span>
                               )}
                             </div>
+                            <div className="flex items-center gap-3 text-xs text-slate-500 font-medium flex-wrap">
+                              <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {session.date}</span>
+                              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {session.startTime} - {session.endTime}</span>
+                              <span>Progress: {session.completedCount || 0} / {session.totalCount || checklist.length}</span>
+                            </div>
                           </div>
-                        </button>
 
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => openTaskModal(item)}
-                            className="text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
-                            title="Remarks / Notes"
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                          </button>
-
-                          {isAdmin && (
-                            <button
-                              onClick={() => deleteChecklistItem(item.id, userRole)}
-                              className="text-slate-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </>
-        )}
-
-        {/* TAB 2: MASTER INVENTORY */}
-        {activeTab === 'inventory' && (
-          <>
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-2xl font-bold">Master Inventory</h1>
-                <p className="text-sm text-slate-500">Equipment status, color categories, and consolidated remarks</p>
-              </div>
-
-              {isAdmin && (
-                <button
-                  onClick={() => setIsAddInventoryModalOpen(true)}
-                  className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center hover:bg-indigo-700 shadow-sm"
-                >
-                  <Plus className="w-4 h-4 mr-1" /> Add Equipment
-                </button>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              {inventory.length === 0 ? (
-                <div className="text-center p-8 bg-white rounded-xl border border-dashed text-slate-400">
-                  No inventory items recorded.
-                </div>
-              ) : (
-                inventory.map((item) => {
-                  const remarksHistory = getInventoryRemarksHistory(item);
-                  
-                  const activeRemarks = remarksHistory.filter(r => r.isPendingResolution !== false);
-                  const hasActiveRemarks = activeRemarks.length > 0;
-                  const needsAction = item.status === 'needs_repair' || item.status === 'broken';
-
-                  const colorStyle = COLOR_MAP[(item.categoryColor as CategoryColor) || 'slate'];
-
-                  return (
-                    <div key={item.id} className={`p-4 bg-white rounded-xl border border-l-4 ${colorStyle.border} shadow-sm space-y-2`}>
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-sm text-slate-800">{item.name}</span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold ${colorStyle.bg} ${colorStyle.text}`}>
-                              {item.category}
-                            </span>
-                            <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-semibold border border-slate-200">
-                              Qty: {item.quantity || 1}
-                            </span>
-                            {hasActiveRemarks && (
-                              needsAction ? (
-                                <span className="text-[10px] px-2 py-0.5 bg-rose-100 text-rose-800 rounded-md font-semibold flex items-center gap-1 border border-rose-200">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
-                                  Action Needed ({activeRemarks.length})
-                                </span>
-                              ) : (
-                                <span className="text-[10px] px-2 py-0.5 bg-blue-100 text-blue-800 rounded-md font-semibold flex items-center gap-1 border border-blue-200">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                                  New Remark ({activeRemarks.length})
-                                </span>
-                              )
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-400">Location: {item.location || 'Main Closet'}</p>
-                        </div>
-
-                        <div className="flex items-center gap-1.5">
-                          {isAdmin ? (
-                            <select
-                              value={item.status}
-                              onChange={(e) => updateInventoryStatus(item.id, e.target.value as InventoryStatus, userRole)}
-                              className={`text-xs px-2.5 py-1 rounded-lg border font-semibold outline-none bg-white cursor-pointer ${
-                                item.status === 'available' ? 'border-emerald-300 text-emerald-700 bg-emerald-50' :
-                                item.status === 'in_use' ? 'border-blue-300 text-blue-700 bg-blue-50' :
-                                item.status === 'needs_repair' ? 'border-amber-300 text-amber-700 bg-amber-50' :
-                                'border-red-300 text-red-700 bg-red-50'
-                              }`}
-                            >
-                              <option value="available">Available</option>
-                              <option value="in_use">In Use</option>
-                              <option value="needs_repair">Needs Repair</option>
-                              <option value="broken">Broken</option>
-                            </select>
-                          ) : (
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                              item.status === 'available' ? 'bg-emerald-100 text-emerald-700' :
-                              item.status === 'in_use' ? 'bg-blue-100 text-blue-700' :
-                              item.status === 'needs_repair' ? 'bg-amber-100 text-amber-700' :
-                              'bg-red-100 text-red-700'
-                            }`}>
-                              {item.status.replace('_', ' ')}
-                            </span>
-                          )}
-
-                          {isAdmin && (
-                            <button
-                              onClick={() => openEditInventoryModal(item)}
-                              className="text-slate-400 hover:text-indigo-600 p-1.5 rounded hover:bg-indigo-50 transition-colors"
-                              title="Edit Equipment Details"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                          )}
-
-                          <button
-                            onClick={() => openTaskModal(item)}
-                            className={`relative p-1.5 rounded-lg transition-colors ${
-                              hasActiveRemarks 
-                                ? (needsAction ? 'text-rose-600 bg-rose-50 hover:bg-rose-100' : 'text-blue-600 bg-blue-50 hover:bg-blue-100')
-                                : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-100'
-                            }`}
-                            title="View / Edit Remarks"
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                          </button>
-
-                          {isAdmin && (
-                            <button
-                              onClick={() => deleteInventoryItem(item.id, userRole)}
-                              className="text-slate-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </>
-        )}
-
-        {/* TAB 3: SCHEDULES & SUMMARIES */}
-        {activeTab === 'schedules' && (
-          <>
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-2xl font-bold">User Schedules & Summaries</h1>
-                <p className="text-sm text-slate-500">Real-time schedule sessions and checklist results</p>
-              </div>
-
-              {isAdmin && (
-                <button
-                  onClick={() => setIsAddScheduleModalOpen(true)}
-                  className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center hover:bg-indigo-700 shadow-sm"
-                >
-                  <Plus className="w-4 h-4 mr-1" /> Schedule User
-                </button>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              {schedules.length === 0 ? (
-                <div className="text-center p-8 bg-white rounded-xl border border-dashed text-slate-400">
-                  No schedules created yet.
-                </div>
-              ) : (
-                schedules.map((session) => {
-                  const isActive = activeScheduleId === session.id;
-                  return (
-                    <div 
-                      key={session.id} 
-                      className={`p-4 rounded-xl border shadow-sm transition-all ${
-                        isActive ? 'bg-indigo-50/50 border-indigo-300 ring-1 ring-indigo-300' : 'bg-white border-slate-200'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-sm text-slate-800">{session.userName}</span>
-                            {isActive && (
-                              <span className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-                                Active Session (Real-Time)
-                              </span>
-                            )}
-                            {session.isCompleted && (
-                              <span className="text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-                                Completed / Auto-Submitted
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-3 text-xs text-slate-500 font-medium flex-wrap">
-                            <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {session.date}</span>
-                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {session.startTime} - {session.endTime}</span>
-                            <span>Progress: {session.completedCount || 0} / {session.totalCount || checklist.length}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => setSelectedSummarySession(session)}
-                            className="px-3 py-1.5 text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg flex items-center gap-1"
-                          >
-                            <FileText className="w-3.5 h-3.5" /> Summary
-                          </button>
-
-                          {isAdmin && (
                             <button
-                              onClick={() => deleteScheduleSession(session.id, userRole)}
-                              className="text-slate-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors"
+                              onClick={() => setSelectedSummarySession(session)}
+                              className="px-3 py-1.5 text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg flex items-center gap-1"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <FileText className="w-3.5 h-3.5" /> Summary
                             </button>
-                          )}
+
+                            {isAdmin && (
+                              <button
+                                onClick={() => deleteScheduleSession(session.id, userRole)}
+                                className="text-slate-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </>
-        )}
-      </main>
+                    );
+                  })
+                )}
+              </div>
+            </>
+          )}
+        </main>
+      </div>
+
+      {/* FOOTER */}
+      <footer className="bg-white border-t border-slate-200 py-4 px-6 mt-12 text-center text-xs text-slate-500">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p>© {new Date().getFullYear()} Audio Tech Ministry. All rights reserved.</p>
+          <p className="text-slate-400">Streamlining service workflows and equipment tracking.</p>
+        </div>
+      </footer>
 
       {/* EDIT INVENTORY MODAL */}
       {editingInventoryItem && isAdmin && (
