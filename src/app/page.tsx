@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { useAuth, UserRole } from '@/context/AuthContext';
 import { useApp, ExtendedChecklistItem, InventoryItem, InventoryStatus, RemarkEntry, ScheduleSession, CategoryColor } from '@/context/ChecklistContext';
 import LoginPage from '@/components/LoginPage';
+import { 
+  // ... your other imports
+  Loader2 
+} from 'lucide-react';
 
 import { 
   CheckCircle2, 
@@ -44,6 +48,8 @@ export default function ChecklistPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  
 
   const { currentUser, logout, addAdminAccount, deleteAdminAccount, updateUserRole, deleteUserAccount, users } = useAuth();
   const { 
@@ -154,7 +160,16 @@ export default function ChecklistPage() {
     return () => clearInterval(interval);
   }, [schedules, activeScheduleId, setActiveScheduleId]);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+          <p className="text-xs font-semibold text-slate-500">Loading Audio Tech Ministry...</p>
+        </div>
+      </div>
+    );
+  }
   if (!currentUser) return <LoginPage />;
 
   const userRole = currentUser.role; 
